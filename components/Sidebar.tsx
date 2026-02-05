@@ -17,6 +17,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole, 
     { id: 'dashboard', name: 'Dashboard', icon: ICONS.Dashboard, roles: [UserRole.ADMIN, UserRole.EMPLOYEE] },
     { id: 'calendar', name: 'Agenda', icon: ICONS.Calendar, roles: [UserRole.ADMIN, UserRole.EMPLOYEE] },
     { id: 'inventory', name: 'Stock', icon: ICONS.Inventory, roles: [UserRole.ADMIN, UserRole.EMPLOYEE] },
+    { id: 'reports', name: 'Reportes', icon: ICONS.Reports, roles: [UserRole.ADMIN] },
+    { id: 'ticket_settings', name: 'Ajustes Ticket', icon: ICONS.Settings, roles: [UserRole.ADMIN] },
     { id: 'users', name: 'Empleados', icon: ICONS.Users, roles: [UserRole.ADMIN] },
   ];
 
@@ -33,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole, 
         </div>
       </div>
       
-      <nav className="flex-1 mt-8 px-4">
+      <nav className="flex-1 mt-8 px-4 overflow-y-auto custom-scrollbar">
         <ul className="space-y-3">
           {menuItems.map((item) => {
             if (!item.roles.includes(userRole)) return null;

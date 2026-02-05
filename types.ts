@@ -4,10 +4,21 @@ export enum UserRole {
   EMPLOYEE = 'EMPLOYEE'
 }
 
+export interface TicketConfig {
+  businessName: string;
+  slogan: string;
+  address: string;
+  location: string;
+  phone: string;
+  website: string;
+  footerMessage: string;
+}
+
 export interface User {
   id: string;
   name: string;
   username: string;
+  password?: string;
   role: UserRole;
 }
 

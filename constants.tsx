@@ -13,7 +13,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Printer,
-  Sparkles
+  FileText,
+  Download,
+  TrendingUp
 } from 'lucide-react';
 import { UserRole, User, Service, Product } from './types';
 import Logo from './components/Logo';
@@ -32,6 +34,8 @@ export const ICONS = {
   POS: <ShoppingCart size={20} />,
   Inventory: <Package size={20} />,
   Users: <Users size={20} />,
+  Reports: <FileText size={20} />,
+  Trending: <TrendingUp size={20} />,
   Settings: <Settings size={20} />,
   Logout: <LogOut size={20} />,
   Plus: <Plus size={20} />,
@@ -39,6 +43,7 @@ export const ICONS = {
   Check: <CheckCircle size={20} />,
   Alert: <AlertTriangle size={20} />,
   Print: <Printer size={20} />,
+  Download: <Download size={20} />,
   Logo: <Logo className="w-6 h-6" />
 };
 

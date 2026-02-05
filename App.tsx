@@ -6,9 +6,21 @@ import CalendarView from './views/CalendarView';
 import POSView from './views/POSView';
 import UsersView from './views/UsersView';
 import InventoryView from './views/InventoryView';
+import ReportsView from './views/ReportsView';
+import TicketSettingsView from './views/TicketSettingsView';
 import Logo from './components/Logo';
-import { UserRole, User, Product, CajaSession, Sale, SheetConfig } from './types';
-import { MOCK_USERS, MOCK_PRODUCTS, ICONS, COLORS } from './constants';
+import { UserRole, User, Product, CajaSession, Sale, SheetConfig, TicketConfig } from './types';
+import { MOCK_USERS, MOCK_PRODUCTS } from './constants';
+
+const DEFAULT_TICKET: TicketConfig = {
+  businessName: 'MG CONTROL',
+  slogan: 'Estética Corporal de Lujo',
+  address: 'Av. Siempre Viva 742',
+  location: 'Buenos Aires, Argentina',
+  phone: '+54 9 11 1234-5678',
+  website: 'www.mgcontrol.com.ar',
+  footerMessage: '¡GRACIAS POR TU PREFERENCIA!'
+};
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -16,7 +28,30 @@ const App: React.FC = () => {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
 
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  // Persistencia de Usuarios
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('mg_users');
+    return saved ? JSON.parse(saved) : MOCK_USERS.map(u => ({ ...u, password: 'admin' }));
+  });
+
+  // Persistencia de Productos
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('mg_products');
+    return saved ? JSON.parse(saved) : MOCK_PRODUCTS;
+  });
+
+  // Persistencia de Historial de Ventas Total
+  const [allSales, setAllSales] = useState<Sale[]>(() => {
+    const saved = localStorage.getItem('mg_all_sales');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Persistencia de Configuración de Ticket
+  const [ticketConfig, setTicketConfig] = useState<TicketConfig>(() => {
+    const saved = localStorage.getItem('mg_ticket_config');
+    return saved ? JSON.parse(saved) : DEFAULT_TICKET;
+  });
+
   const [caja, setCaja] = useState<CajaSession>({
     isOpen: false,
     openedAt: null,
@@ -31,14 +66,32 @@ const App: React.FC = () => {
     isAutoSync: false
   });
 
+  useEffect(() => {
+    localStorage.setItem('mg_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('mg_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('mg_all_sales', JSON.stringify(allSales));
+  }, [allSales]);
+
+  useEffect(() => {
+    localStorage.setItem('mg_ticket_config', JSON.stringify(ticketConfig));
+  }, [ticketConfig]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const user = MOCK_USERS.find(u => u.username === loginData.username);
-    if (user) {
+    const user = users.find(u => u.username === loginData.username);
+    const validPass = user?.password || '1234';
+    
+    if (user && loginData.password === validPass) {
       setCurrentUser(user);
       setError('');
     } else {
-      setError('Credenciales inválidas.');
+      setError('Usuario o clave incorrectos.');
     }
   };
 
@@ -62,11 +115,13 @@ const App: React.FC = () => {
   };
 
   const recordSale = (sale: Sale) => {
+    setAllSales(prev => [...prev, sale]);
     setCaja(prev => ({ 
       ...prev, 
       totalSales: prev.totalSales + (sale.total - (sale.deposit || 0)),
       sessionSales: [...prev.sessionSales, sale]
     }));
+
     setProducts(currentProducts => 
       currentProducts.map(p => {
         const soldItem = sale.items.find(item => item.id === p.id && item.type === 'PRODUCT');
@@ -82,8 +137,7 @@ const App: React.FC = () => {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
       const response = await fetch(url);
       const csvText = await response.text();
-      
-      const rows = csvText.split('\n').slice(1); // Omitir encabezado
+      const rows = csvText.split('\n').slice(1);
       const parsedProducts: Product[] = rows.map(row => {
         const [id, name, price, stock, minStock, category] = row.split(',').map(cell => cell.trim().replace(/"/g, ''));
         return {
@@ -116,7 +170,7 @@ const App: React.FC = () => {
 
         <div className="w-full max-w-md bg-[#111111] rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] p-12 z-10 animate-slideUp border border-[#C5A059]/20">
           <div className="text-center mb-10">
-            <Logo className="w-32 h-32 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(197,160,89,0.3)]" />
+            <Logo className="w-24 h-24 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(197,160,89,0.3)]" />
             <h1 className="text-4xl font-black text-[#C5A059] tracking-tighter mb-1">MG</h1>
             <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.5em]">CONTROL BEAUTY</p>
           </div>
@@ -127,6 +181,7 @@ const App: React.FC = () => {
               <input 
                 required
                 type="text" 
+                autoComplete="username"
                 value={loginData.username}
                 onChange={e => setLoginData({...loginData, username: e.target.value})}
                 className="w-full px-8 py-5 bg-[#1A1A1A] border border-[#C5A059]/10 rounded-full focus:border-[#C5A059] outline-none transition-all font-bold text-white"
@@ -138,6 +193,7 @@ const App: React.FC = () => {
               <input 
                 required
                 type="password" 
+                autoComplete="current-password"
                 value={loginData.password}
                 onChange={e => setLoginData({...loginData, password: e.target.value})}
                 className="w-full px-8 py-5 bg-[#1A1A1A] border border-[#C5A059]/10 rounded-full focus:border-[#C5A059] outline-none transition-all font-bold text-white"
@@ -149,6 +205,7 @@ const App: React.FC = () => {
             <button type="submit" className="w-full py-6 bg-[#C5A059] text-black rounded-full font-black text-lg shadow-xl shadow-[#C5A059]/20 hover:bg-[#E2C284] transition-all transform active:scale-95">
               INICIAR SESIÓN
             </button>
+            <p className="text-center text-[9px] text-gray-700 font-black uppercase tracking-widest">v2.2 - Personalización de Ticket</p>
           </form>
         </div>
       </div>
@@ -159,9 +216,11 @@ const App: React.FC = () => {
     switch (activeView) {
       case 'dashboard': return <DashboardView caja={caja} openCaja={openCaja} closeCaja={closeCaja} />;
       case 'calendar': return <CalendarView />;
-      case 'pos': return <POSView products={products} caja={caja} onConfirmSale={recordSale} />;
+      case 'pos': return <POSView products={products} caja={caja} onConfirmSale={recordSale} ticketConfig={ticketConfig} />;
       case 'inventory': return <InventoryView products={products} onAdd={p => setProducts([...products, p])} onUpdate={p => setProducts(products.map(x => x.id === p.id ? p : x))} onDelete={id => setProducts(products.filter(x => x.id !== id))} onSync={syncFromSheet} config={sheetConfig} />;
-      case 'users': return <UsersView />;
+      case 'reports': return <ReportsView sales={allSales} ticketConfig={ticketConfig} />;
+      case 'ticket_settings': return <TicketSettingsView config={ticketConfig} setConfig={setTicketConfig} />;
+      case 'users': return <UsersView users={users} setUsers={setUsers} />;
       default: return <DashboardView caja={caja} openCaja={openCaja} closeCaja={closeCaja} />;
     }
   };

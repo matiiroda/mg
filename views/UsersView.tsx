@@ -1,24 +1,34 @@
 
 import React, { useState } from 'react';
-// Add MOCK_USERS to the imports from constants
-import { ICONS, MOCK_USERS } from '../constants';
+import { ICONS } from '../constants';
 import { UserRole, User } from '../types';
 import Logo from '../components/Logo';
 
-const UsersView: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+interface UsersViewProps {
+  users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+}
+
+const UsersView: React.FC<UsersViewProps> = ({ users, setUsers }) => {
   const [showModal, setShowModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', username: '', role: UserRole.EMPLOYEE });
+  const [newUser, setNewUser] = useState({ name: '', username: '', password: '', role: UserRole.EMPLOYEE });
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     const user: User = {
       id: Math.random().toString(36).substr(2, 9),
-      ...newUser
+      ...newUser,
+      password: newUser.password || '1234' // Password por defecto si se deja vacío
     };
-    setUsers([...users, user]);
+    setUsers(prev => [...prev, user]);
     setShowModal(false);
-    setNewUser({ name: '', username: '', role: UserRole.EMPLOYEE });
+    setNewUser({ name: '', username: '', password: '', role: UserRole.EMPLOYEE });
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('¿Eliminar este perfil de acceso?')) {
+      setUsers(prev => prev.filter(u => u.id !== id));
+    }
   };
 
   return (
@@ -68,7 +78,12 @@ const UsersView: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-8 py-5">
-                  <button className="text-gray-600 hover:text-[#C5A059] font-black text-[10px] uppercase tracking-widest transition-colors">EDITAR</button>
+                  <div className="flex gap-4">
+                    <button className="text-gray-600 hover:text-[#C5A059] font-black text-[10px] uppercase tracking-widest transition-colors">EDITAR</button>
+                    {user.username !== 'admin' && (
+                      <button onClick={() => handleDelete(user.id)} className="text-rose-900 hover:text-rose-500 font-black text-[10px] uppercase tracking-widest transition-colors">ELIMINAR</button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -89,9 +104,15 @@ const UsersView: React.FC = () => {
                 <label className="block text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">Nombre Completo</label>
                 <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white placeholder-gray-800" />
               </div>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">Usuario de Acceso</label>
-                <input required type="text" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white placeholder-gray-800" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">Usuario</label>
+                  <input required type="text" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white placeholder-gray-800" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">Clave</label>
+                  <input required type="text" placeholder="1234" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white placeholder-gray-800" />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="block text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">Rol de Sistema</label>
