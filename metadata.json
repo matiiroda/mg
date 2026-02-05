@@ -1,0 +1,7 @@
+{
+  "name": "MG CONTROL",
+  "description": "Sistema integral de gestión para estéticas: caja, control de stock, agenda de turnos y administración de empleados.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
