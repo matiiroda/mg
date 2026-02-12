@@ -1,0 +1,17 @@
+
+{
+  "name": "MG CONTROL - Estética Corporal",
+  "short_name": "MG CONTROL",
+  "description": "Sistema de Gestión y Caja para Estéticas",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#C5A059",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -13,16 +13,6 @@ interface ThermalTicketProps {
   config?: TicketConfig;
 }
 
-const DEFAULT_CONFIG: TicketConfig = {
-  businessName: 'MG CONTROL',
-  slogan: 'Estética Corporal de Lujo',
-  address: 'Av. Siempre Viva 742',
-  location: 'Buenos Aires, Argentina',
-  phone: '+54 9 11 1234-5678',
-  website: 'www.mgcontrol.com.ar',
-  footerMessage: '¡GRACIAS POR TU PREFERENCIA!'
-};
-
 const PAYMENT_LABELS_ES = {
   CASH: 'EFECTIVO',
   CARD: 'TARJETA',
@@ -37,117 +27,83 @@ const ThermalTicket: React.FC<ThermalTicketProps> = ({
   date, 
   clientName,
   deposit = 0,
-  config = DEFAULT_CONFIG
+  config
 }) => {
   const finalTotal = total - deposit;
   const paymentLabel = PAYMENT_LABELS_ES[paymentMethod as keyof typeof PAYMENT_LABELS_ES] || paymentMethod;
 
-  const hrStyle: React.CSSProperties = {
-    border: 'none',
-    borderTop: '2px dashed #000000',
-    margin: '10px 0',
-    width: '100%'
-  };
-
-  const boldLabelStyle: React.CSSProperties = {
-    fontWeight: 900,
-    fontSize: '11px',
-    color: '#000000'
-  };
-
+  // Estilos ultra-minimalistas para impresoras térmicas (solo blanco y negro puro)
   return (
-    <div className="thermal-ticket">
-      {/* Encabezado Principal */}
-      <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 900, margin: '0 0 2px 0', letterSpacing: '-1px', color: '#000000' }}>
-          {config.businessName.toUpperCase()}
-        </h2>
-        <p style={{ margin: '0', fontWeight: 700, fontSize: '12px', color: '#000000' }}>
-          {config.slogan.toUpperCase()}
-        </p>
-        <div style={{ fontSize: '11px', marginTop: '8px', fontWeight: 600, color: '#000000' }}>
-          <p style={{ margin: '1px 0' }}>{config.address}</p>
-          <p style={{ margin: '1px 0' }}>{config.location}</p>
-          <p style={{ margin: '1px 0', fontWeight: 900 }}>WHATSAPP: {config.phone}</p>
-        </div>
+    <div className="thermal-ticket" style={{ backgroundColor: 'white', color: 'black' }}>
+      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0' }}>{config?.businessName.toUpperCase() || 'MG CONTROL'}</h2>
+        <p style={{ fontSize: '11px', margin: '2px 0' }}>{config?.slogan || ''}</p>
+        <p style={{ fontSize: '10px', margin: '0' }}>{config?.address || ''}</p>
+        <p style={{ fontSize: '10px', margin: '0' }}>TEL: {config?.phone || ''}</p>
       </div>
       
-      <div style={hrStyle}></div>
+      <div style={{ borderTop: '1px dashed black', margin: '10px 0' }}></div>
       
-      {/* Datos del Ticket */}
-      <div style={{ padding: '2px 0', marginBottom: '10px', fontSize: '11px', fontWeight: 700 }}>
-        <p style={{ margin: '4px 0' }}><span style={boldLabelStyle}>FECHA:</span> {new Date(date).toLocaleString('es-AR')}</p>
-        <p style={{ margin: '4px 0' }}><span style={boldLabelStyle}>TICKET:</span> #{saleId}</p>
-        <p style={{ margin: '4px 0' }}><span style={boldLabelStyle}>CLIENTE:</span> {clientName?.toUpperCase() || 'CONSUMIDOR FINAL'}</p>
+      <div style={{ fontSize: '10px' }}>
+        <p style={{ margin: '2px 0' }}>FECHA: {new Date(date).toLocaleString()}</p>
+        <p style={{ margin: '2px 0' }}>TICKET: #{saleId}</p>
+        <p style={{ margin: '2px 0' }}>CLIENTE: {clientName?.toUpperCase() || 'CONSUMIDOR FINAL'}</p>
       </div>
 
-      <div style={hrStyle}></div>
+      <div style={{ borderTop: '1px dashed black', margin: '10px 0' }}></div>
 
-      {/* Lista de Items */}
       <div style={{ marginBottom: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, marginBottom: '8px', fontSize: '11px', borderBottom: '1.5px solid #000' }}>
-          <span>DETALLE</span>
-          <span>SUBTOTAL</span>
-        </div>
-        {items.map((item, idx) => (
-          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: '12px', fontWeight: 700 }}>
-            <span style={{ maxWidth: '75%', lineHeight: '1.1' }}>
-              {item.quantity}x {item.name.toUpperCase()}
-            </span>
-            <span style={{ fontWeight: 900 }}>${(item.price * item.quantity).toFixed(0)}</span>
-          </div>
-        ))}
+        <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid black' }}>
+              <th style={{ textAlign: 'left' }}>ITEM</th>
+              <th style={{ textAlign: 'right' }}>SUB</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, idx) => (
+              <tr key={idx}>
+                <td style={{ padding: '4px 0' }}>{item.quantity}x {item.name.toUpperCase()}</td>
+                <td style={{ textAlign: 'right' }}>${(item.price * item.quantity).toFixed(0)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <div style={{ borderTop: '2px solid #000', paddingTop: '10px', marginTop: '5px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700 }}>
-          <span>VALOR SERVICIOS:</span>
+      <div style={{ borderTop: '1px solid black', paddingTop: '5px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold' }}>
+          <span>TOTAL:</span>
           <span>${total.toFixed(0)}</span>
         </div>
-        
         {deposit > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: '2px' }}>
-            <span>SEÑA ENTREGADA:</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+            <span>SEÑA:</span>
             <span>-${deposit.toFixed(0)}</span>
           </div>
         )}
-
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          marginTop: '8px', 
-          fontSize: '20px', 
-          fontWeight: 900, 
-          backgroundColor: '#000', 
-          color: '#FFF !important',
-          padding: '5px 8px',
-          borderRadius: '4px'
-        }}>
-          <span style={{ color: '#FFF !important' }}>TOTAL:</span>
-          <span style={{ color: '#FFF !important' }}>${finalTotal.toFixed(0)}</span>
+          marginTop: '5px', 
+          fontSize: '16px', 
+          fontWeight: 'bold',
+          border: '2px solid black',
+          padding: '4px'
+        }} className="total-box">
+          <span>A PAGAR:</span>
+          <span>${finalTotal.toFixed(0)}</span>
         </div>
         
-        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-          <p style={{ 
-            display: 'inline-block',
-            border: '1.5px solid #000',
-            padding: '4px 15px',
-            fontWeight: 900, 
-            fontSize: '13px',
-            textTransform: 'uppercase'
-          }}>
-            PAGO: {paymentLabel}
-          </p>
-        </div>
+        <p style={{ textAlign: 'center', fontSize: '11px', fontWeight: 'bold', marginTop: '10px' }}>
+          PAGO: {paymentLabel.toUpperCase()}
+        </p>
       </div>
 
-      {/* Pie de Ticket */}
-      <div style={{ textAlign: 'center', marginTop: '25px', fontSize: '11px', borderTop: '2px dashed #000', paddingTop: '15px' }}>
-        <p style={{ margin: '0', fontWeight: 900, letterSpacing: '1px' }}>{config.footerMessage.toUpperCase()}</p>
-        <p style={{ margin: '8px 0 0 0', fontWeight: 700, textDecoration: 'underline' }}>{config.website.toLowerCase()}</p>
-        <div style={{ marginTop: '15px', fontSize: '10px', fontWeight: 800 }}>
-          *** NO VALIDO COMO FACTURA ***
-        </div>
+      <div style={{ textAlign: 'center', marginTop: '20px', borderTop: '1px dashed black', paddingTop: '10px', fontSize: '10px' }}>
+        <p style={{ margin: '0' }}>{config?.footerMessage.toUpperCase() || '¡GRACIAS!'}</p>
+        <p style={{ margin: '5px 0' }}>{config?.website || ''}</p>
+        <p style={{ marginTop: '10px', fontSize: '8px' }}>*** NO VALIDO COMO FACTURA ***</p>
       </div>
     </div>
   );

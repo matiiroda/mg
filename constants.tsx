@@ -51,11 +51,15 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_SERVICES: Service[] = [
-  { id: 's1', name: 'Masaje Reductor', price: 2500, duration: 60 },
-  { id: 's2', name: 'Limpieza Facial Profunda', price: 1800, duration: 45 },
-  { id: 's3', name: 'Drenaje Linfático', price: 3000, duration: 90 },
+  { id: 's1', name: 'Masaje Reductor', price: 2500, duration: 60, category: 'CORPORAL' },
+  { id: 's2', name: 'Limpieza Facial Profunda', price: 1800, duration: 45, category: 'FACIAL' },
+  { id: 's3', name: 'Drenaje Linfático', price: 3000, duration: 90, category: 'CORPORAL' },
+  { id: 's4', name: 'Peeling Químico', price: 2200, duration: 30, category: 'FACIAL' },
+  { id: 's5', name: 'Depilación Láser Soprano', price: 4500, duration: 60, category: 'DEPILACION' },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
-  { id: 'p1', name: 'Crema Exfoliante 500g', price: 1200, stock: 15, minStock: 5, category: 'Insumos' },
+  { id: 'p1', name: 'Crema Exfoliante 500g', price: 1200, stock: 15, minStock: 5, category: 'INSUMOS' },
+  { id: 'p2', name: 'Serum Vitamina C', price: 2800, stock: 8, minStock: 3, category: 'VENTA' },
+  { id: 'p3', name: 'Protector Solar 50+', price: 3200, stock: 12, minStock: 5, category: 'VENTA' },
 ];

@@ -27,6 +27,7 @@ export interface Service {
   name: string;
   price: number;
   duration: number;
+  category: string; // Campo añadido para diferenciar tipos de servicios
 }
 
 export interface Product {
@@ -42,6 +43,7 @@ export interface SaleItem {
   id: string;
   name: string;
   type: 'SERVICE' | 'PRODUCT';
+  category: string; // Añadido para mayor detalle en el registro
   price: number;
   quantity: number;
 }
@@ -73,7 +75,6 @@ export interface SheetConfig {
   syncUrl?: string; // URL de Google Apps Script para escritura
 }
 
-// Added missing Appointment interface to resolve import error in CalendarView.tsx
 export interface Appointment {
   id: string;
   clientId: string;

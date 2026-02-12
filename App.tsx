@@ -7,8 +7,8 @@ import UsersView from './views/UsersView';
 import InventoryView from './views/InventoryView';
 import ReportsView from './views/ReportsView';
 import TicketSettingsView from './views/TicketSettingsView';
-import { UserRole, User, Product, CajaSession, Sale, SheetConfig, TicketConfig } from './types';
-import { MOCK_USERS, MOCK_PRODUCTS } from './constants';
+import { UserRole, User, Product, Service, CajaSession, Sale, SheetConfig, TicketConfig } from './types';
+import { MOCK_USERS, MOCK_PRODUCTS, MOCK_SERVICES } from './constants';
 
 const DEFAULT_TICKET: TicketConfig = {
   businessName: 'MG CONTROL',
@@ -34,6 +34,11 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('mg_products');
     return saved ? JSON.parse(saved) : MOCK_PRODUCTS;
+  });
+
+  const [services, setServices] = useState<Service[]>(() => {
+    const saved = localStorage.getItem('mg_services');
+    return saved ? JSON.parse(saved) : MOCK_SERVICES;
   });
 
   const [allSales, setAllSales] = useState<Sale[]>(() => {
@@ -70,7 +75,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('mg_products', JSON.stringify(products));
-  }, [products]);
+    localStorage.setItem('mg_services', JSON.stringify(services));
+  }, [products, services]);
 
   useEffect(() => {
     localStorage.setItem('mg_all_sales', JSON.stringify(allSales));
@@ -94,22 +100,38 @@ const App: React.FC = () => {
       const csvText = await response.text();
       const rows = csvText.split('\n').filter(row => row.trim() !== '');
       
-      const parsedProducts: Product[] = rows.slice(1).map(row => {
+      const newProducts: Product[] = [];
+      const newServices: Service[] = [];
+
+      rows.slice(1).forEach(row => {
         const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, ''));
-        const [id, name, price, stock, minStock, category] = columns;
+        // Esperamos: ID, TIPO (PRODUCTO/SERVICIO), NOMBRE, PRECIO, STOCK/DURACION, MIN_STOCK, CATEGORIA
+        const [id, type, name, price, value, minStock, category] = columns;
         
-        return {
+        const baseItem = {
           id: id || Math.random().toString(36).substr(2, 9),
           name: name || 'Sin nombre',
-          price: parseFloat(price.replace(/[^0-9.-]+/g, "")) || 0,
-          stock: parseInt(stock) || 0,
-          minStock: parseInt(minStock) || 5,
+          price: parseFloat(price?.replace(/[^0-9.-]+/g, "")) || 0,
           category: category || 'General'
         };
-      }).filter(p => p.name !== 'Sin nombre');
 
-      if (parsedProducts.length > 0) {
-        setProducts(parsedProducts);
+        if (type?.toUpperCase() === 'SERVICIO') {
+          newServices.push({
+            ...baseItem,
+            duration: parseInt(value) || 60
+          });
+        } else {
+          newProducts.push({
+            ...baseItem,
+            stock: parseInt(value) || 0,
+            minStock: parseInt(minStock) || 5
+          });
+        }
+      });
+
+      if (newProducts.length > 0 || newServices.length > 0) {
+        if (newProducts.length > 0) setProducts(newProducts);
+        if (newServices.length > 0) setServices(newServices);
         setSheetConfig(prev => ({ ...prev, sheetId, lastSync: new Date().toISOString() }));
         return true;
       }
@@ -197,13 +219,17 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (activeView) {
       case 'dashboard': return <DashboardView caja={caja} openCaja={openCaja} closeCaja={closeCaja} />;
-      case 'pos': return <POSView products={products} caja={caja} onConfirmSale={recordSale} ticketConfig={ticketConfig} />;
+      case 'pos': return <POSView products={products} services={services} caja={caja} onConfirmSale={recordSale} ticketConfig={ticketConfig} />;
       case 'inventory': return (
         <InventoryView 
           products={products} 
-          onAdd={p => setProducts([...products, p])} 
-          onUpdate={p => setProducts(products.map(x => x.id === p.id ? p : x))} 
-          onDelete={id => setProducts(products.filter(x => x.id !== id))} 
+          services={services}
+          onAddProduct={p => setProducts([...products, p])} 
+          onUpdateProduct={p => setProducts(products.map(x => x.id === p.id ? p : x))} 
+          onDeleteProduct={id => setProducts(products.filter(x => x.id !== id))} 
+          onAddService={s => setServices([...services, s])}
+          onUpdateService={s => setServices(services.map(x => x.id === s.id ? s : x))}
+          onDeleteService={id => setServices(services.filter(x => x.id !== id))}
           onSync={syncFromSheet} 
           config={sheetConfig}
           onUpdateConfig={setSheetConfig}

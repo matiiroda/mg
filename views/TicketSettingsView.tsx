@@ -8,9 +8,10 @@ interface TicketSettingsViewProps {
   setConfig: (config: TicketConfig) => void;
 }
 
+// Add category property to mock items to fix type errors
 const MOCK_ITEMS: SaleItem[] = [
-  { id: '1', name: 'Tratamiento Facial', type: 'SERVICE', price: 2500, quantity: 1 },
-  { id: '2', name: 'Crema Hidratante', type: 'PRODUCT', price: 1200, quantity: 2 }
+  { id: '1', name: 'Tratamiento Facial', type: 'SERVICE', category: 'FACIAL', price: 2500, quantity: 1 },
+  { id: '2', name: 'Crema Hidratante', type: 'PRODUCT', category: 'VENTA', price: 1200, quantity: 2 }
 ];
 
 const TicketSettingsView: React.FC<TicketSettingsViewProps> = ({ config, setConfig }) => {
