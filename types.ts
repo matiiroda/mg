@@ -66,6 +66,14 @@ export interface CajaSession {
   sessionSales: Sale[];
 }
 
+export interface SheetConfig {
+  sheetId: string;
+  lastSync: string | null;
+  isAutoSync: boolean;
+  syncUrl?: string; // URL de Google Apps Script para escritura
+}
+
+// Added missing Appointment interface to resolve import error in CalendarView.tsx
 export interface Appointment {
   id: string;
   clientId: string;
@@ -76,12 +84,6 @@ export interface Appointment {
   date: string;
   deposit: number;
   total: number;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   notes?: string;
-}
-
-export interface SheetConfig {
-  sheetId: string;
-  lastSync: string | null;
-  isAutoSync: boolean;
 }

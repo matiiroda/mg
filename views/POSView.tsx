@@ -37,20 +37,26 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
   const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const finalToPay = Math.max(0, total - depositValue);
 
+  // Función crítica para obtener stock disponible real considerando el carrito
+  const getAvailableStock = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return 0;
+    const inCart = cart.find(c => c.id === productId && c.type === 'PRODUCT')?.quantity || 0;
+    return Math.max(0, product.stock - inCart);
+  };
+
   const addItem = (item: any, type: 'SERVICE' | 'PRODUCT') => {
     if (!caja.isOpen) return alert('La caja está cerrada.');
     
-    const existing = cart.find(c => c.id === item.id && c.type === type);
-    const currentQtyInCart = existing ? existing.quantity : 0;
-
     if (type === 'PRODUCT') {
-      const productInStock = products.find(p => p.id === item.id);
-      if (productInStock && currentQtyInCart + 1 > productInStock.stock) {
-        alert(`Stock insuficiente para "${item.name}". Disponible: ${productInStock.stock}`);
+      const available = getAvailableStock(item.id);
+      if (available <= 0) {
+        alert(`Stock insuficiente para "${item.name}". No puedes agregar más.`);
         return;
       }
     }
 
+    const existing = cart.find(c => c.id === item.id && c.type === type);
     if (existing) {
       setCart(cart.map(c => c.id === item.id && c.type === type ? { ...c, quantity: c.quantity + 1 } : c));
     } else {
@@ -59,6 +65,17 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
   };
 
   const handleFinalize = () => {
+    // Validación final de stock antes de procesar
+    for (const item of cart) {
+      if (item.type === 'PRODUCT') {
+        const product = products.find(p => p.id === item.id);
+        if (!product || product.stock < item.quantity) {
+          alert(`Error fatal: El producto "${item.name}" ya no tiene stock suficiente. Ajusta tu carrito.`);
+          return;
+        }
+      }
+    }
+
     const sale: Sale = {
       id: Math.random().toString(36).substr(2, 10).toUpperCase(),
       timestamp: new Date().toISOString(),
@@ -92,7 +109,7 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
             </svg>
           </div>
           <h2 className="text-4xl font-black text-white mb-2 uppercase tracking-tighter">COBRO FINALIZADO</h2>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.4em] mb-12">El ticket se ha enviado a la cola de impresión</p>
+          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.4em] mb-12">Stock actualizado y ticket generado</p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
@@ -110,7 +127,6 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
           </div>
         </div>
 
-        {/* TICKET REAL (Solo impresora) */}
         <div className="print-only">
           <ThermalTicket 
             {...lastSale} 
@@ -144,20 +160,24 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
           <h3 className="text-xl font-black text-[#C5A059] uppercase tracking-[0.3em] mb-6">Productos Premium</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {products.map(p => {
-              const isOutOfStock = p.stock <= 0;
+              const available = getAvailableStock(p.id);
+              const isOutOfStock = available <= 0;
               return (
                 <button 
                   key={p.id} 
                   disabled={isOutOfStock}
                   onClick={() => addItem(p, 'PRODUCT')} 
-                  className={`p-6 rounded-3xl border text-left transition-all ${
+                  className={`p-6 rounded-3xl border text-left transition-all relative overflow-hidden ${
                     isOutOfStock 
-                    ? 'bg-black border-rose-900/20 opacity-40 cursor-not-allowed' 
+                    ? 'bg-black border-rose-900/40 cursor-not-allowed opacity-60' 
                     : 'bg-[#111111] border-[#C5A059]/10 hover:border-[#C5A059] hover:bg-[#1A1A1A]'
                   }`}
                 >
+                  {isOutOfStock && (
+                    <div className="absolute top-0 right-0 bg-rose-600 text-white font-black text-[8px] px-3 py-1 uppercase tracking-tighter">AGOTADO</div>
+                  )}
                   <p className={`text-[10px] font-bold uppercase tracking-widest ${isOutOfStock ? 'text-rose-500' : 'text-emerald-500'}`}>
-                    {isOutOfStock ? 'SIN STOCK' : `STOCK: ${p.stock}`}
+                    {isOutOfStock ? 'SIN STOCK' : `DISPONIBLE: ${available}`}
                   </p>
                   <h4 className="text-lg font-black text-white mt-1">{p.name}</h4>
                   <p className="text-2xl font-black text-[#C5A059] mt-3">${p.price}</p>
@@ -173,11 +193,16 @@ const POSView: React.FC<POSViewProps> = ({ products, caja, onConfirmSale, ticket
         <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
           {cart.map((item, i) => (
             <div key={i} className="flex justify-between items-center group animate-fadeIn bg-black/30 p-4 rounded-2xl border border-[#C5A059]/5">
-              <div>
+              <div className="flex-1">
                 <p className="font-bold text-sm text-gray-200">{item.name}</p>
-                <p className="text-[10px] text-gray-500 uppercase font-black">{item.quantity} x ${item.price}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-[10px] text-gray-500 uppercase font-black">{item.quantity} x ${item.price}</p>
+                  {item.type === 'PRODUCT' && (
+                    <span className="text-[8px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full font-black">STOCK OK</span>
+                  )}
+                </div>
               </div>
-              <button onClick={() => setCart(cart.filter((_, idx) => idx !== i))} className="text-rose-900 hover:text-rose-500 transition-colors text-2xl font-light">&times;</button>
+              <button onClick={() => setCart(cart.filter((_, idx) => idx !== i))} className="text-rose-900 hover:text-rose-500 transition-colors text-2xl font-light p-2">&times;</button>
             </div>
           ))}
           {cart.length === 0 && <p className="text-center text-gray-600 font-bold uppercase text-[10px] py-16 tracking-[0.3em] opacity-30">Sin ítems seleccionados</p>}

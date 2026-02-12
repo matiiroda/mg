@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { ICONS } from '../constants';
 import { Product, SheetConfig } from '../types';
-import Logo from '../components/Logo';
 
 interface InventoryViewProps {
   products: Product[];
@@ -11,13 +10,15 @@ interface InventoryViewProps {
   onDelete: (id: string) => void;
   onSync: (id: string) => Promise<boolean>;
   config: SheetConfig;
+  onUpdateConfig: (config: SheetConfig) => void;
 }
 
-const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate, onDelete, onSync, config }) => {
+const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate, onDelete, onSync, config, onUpdateConfig }) => {
   const [showModal, setShowModal] = useState(false);
   const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [tempSheetId, setTempSheetId] = useState(config.sheetId);
+  const [tempSyncUrl, setTempSyncUrl] = useState(config.syncUrl || '');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
   const [formData, setFormData] = useState({
@@ -71,11 +72,23 @@ const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate
     const success = await onSync(tempSheetId);
     setIsSyncing(false);
     if (success) {
-      setShowSyncPanel(false);
-      alert('Sincronización exitosa.');
+      alert('Inventario actualizado desde Google Sheets.');
     } else {
-      alert('Error al sincronizar. Asegúrate de que el documento esté publicado como CSV.');
+      alert('Error: Asegúrate de que el documento esté publicado en la web como CSV.');
     }
+  };
+
+  const saveConfig = () => {
+    onUpdateConfig({ 
+      ...config, 
+      sheetId: tempSheetId, 
+      syncUrl: tempSyncUrl 
+    });
+    alert('Configuración de sincronización guardada.');
+  };
+
+  const toggleAutoSync = () => {
+    onUpdateConfig({ ...config, isAutoSync: !config.isAutoSync });
   };
 
   const handleDelete = (id: string) => {
@@ -89,15 +102,19 @@ const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div>
           <h2 className="text-4xl font-black text-[#C5A059] tracking-tighter uppercase leading-none">Inventario</h2>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-1">Control de Stock y Suministros</p>
+          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-1">Control de Stock Blindado</p>
         </div>
         <div className="flex gap-4">
           <button 
             onClick={() => setShowSyncPanel(!showSyncPanel)}
-            className="bg-black border border-[#C5A059]/30 text-[#C5A059] px-8 py-4 rounded-2xl font-black shadow-xl flex items-center gap-2 hover:bg-[#C5A059]/10 transition-all text-xs uppercase"
+            className={`px-8 py-4 rounded-2xl font-black shadow-xl flex items-center gap-2 transition-all text-xs uppercase border ${
+              config.sheetId 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+              : 'bg-black border-[#C5A059]/30 text-[#C5A059] hover:bg-[#C5A059]/10'
+            }`}
           >
             <span className={isSyncing ? 'animate-spin' : ''}>
-              {showSyncPanel ? 'Cerrar Panel' : 'Vincular Sheet'}
+              {config.sheetId ? 'Planilla Vinculada' : 'Vincular Sheet'}
             </span>
           </button>
           <button 
@@ -110,29 +127,67 @@ const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate
       </div>
 
       {showSyncPanel && (
-        <div className="bg-[#1A1A1A] border border-[#C5A059]/20 p-8 rounded-[2.5rem] animate-slideUp">
-          <div className="flex flex-col md:flex-row items-end gap-6">
-            <div className="flex-1 space-y-2">
-              <label className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">ID de Google Sheet (Publicado como CSV)</label>
+        <div className="bg-[#1A1A1A] border border-[#C5A059]/20 p-8 rounded-[2.5rem] animate-slideUp space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">ID de Planilla (Lectura)</label>
               <input 
                 type="text" 
                 value={tempSheetId} 
                 onChange={e => setTempSheetId(e.target.value)} 
-                placeholder="Pegue aquí el ID de su documento"
+                placeholder="ID de la URL del Sheet"
                 className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white text-xs"
               />
             </div>
-            <button 
-              onClick={handleSync}
-              disabled={isSyncing || !tempSheetId}
-              className="bg-[#C5A059] text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px] disabled:opacity-50 h-fit"
-            >
-              {isSyncing ? 'Sincronizando...' : 'Sincronizar Ahora'}
-            </button>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest ml-3">URL de Script (Escritura)</label>
+              <input 
+                type="text" 
+                value={tempSyncUrl} 
+                onChange={e => setTempSyncUrl(e.target.value)} 
+                placeholder="https://script.google.com/macros/s/..."
+                className="w-full px-6 py-4 bg-black border border-[#C5A059]/10 rounded-2xl focus:border-[#C5A059] outline-none font-bold text-white text-xs"
+              />
+            </div>
           </div>
-          <p className="mt-4 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-            Última sincronización: {config.lastSync ? new Date(config.lastSync).toLocaleString() : 'Nunca'}
-          </p>
+          
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between pt-4">
+             <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
+                  <div 
+                    onClick={toggleAutoSync}
+                    className={`w-12 h-6 rounded-full relative cursor-pointer transition-all ${config.isAutoSync ? 'bg-emerald-500' : 'bg-gray-800'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${config.isAutoSync ? 'left-7' : 'left-1'}`}></div>
+                  </div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sincronización Automática</span>
+                </div>
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider">
+                  Última: {config.lastSync ? new Date(config.lastSync).toLocaleTimeString() : 'Nunca'}
+                </p>
+             </div>
+             <div className="flex gap-4">
+                <button 
+                  onClick={saveConfig}
+                  className="bg-white/5 text-gray-400 px-8 py-3 rounded-xl font-black uppercase text-[10px] hover:bg-white/10"
+                >
+                  Guardar Configuración
+                </button>
+                <button 
+                  onClick={handleSync}
+                  disabled={isSyncing || !tempSheetId}
+                  className="bg-[#C5A059] text-black px-10 py-3 rounded-xl font-black uppercase text-[10px] disabled:opacity-50 hover:bg-white transition-all shadow-xl shadow-[#C5A059]/10"
+                >
+                  {isSyncing ? 'Sincronizando...' : 'Forzar Lectura'}
+                </button>
+             </div>
+          </div>
+          
+          <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
+             <p className="text-blue-400 text-[9px] font-bold uppercase leading-relaxed">
+               Consejo: Use un Google Apps Script con el método <code>doPost(e)</code> para recibir las ventas y actualizar su planilla en tiempo real automáticamente.
+             </p>
+          </div>
         </div>
       )}
 
@@ -168,7 +223,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ products, onAdd, onUpdate
                         </span>
                       </td>
                       <td className="px-8 py-6 font-black text-[#C5A059] text-lg">
-                        ${p.price.toFixed(2)}
+                        ${p.price.toFixed(0)}
                       </td>
                       <td className="px-8 py-6">
                         <div className={`text-lg font-black ${isLowStock ? 'text-rose-500' : 'text-emerald-500'}`}>

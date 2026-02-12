@@ -18,7 +18,6 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { UserRole, User, Service, Product } from './types';
-import Logo from './components/Logo';
 
 export const COLORS = {
   gold: '#C5A059',
@@ -43,8 +42,7 @@ export const ICONS = {
   Check: <CheckCircle size={20} />,
   Alert: <AlertTriangle size={20} />,
   Print: <Printer size={20} />,
-  Download: <Download size={20} />,
-  Logo: <Logo className="w-6 h-6" />
+  Download: <Download size={20} />
 };
 
 export const MOCK_USERS: User[] = [

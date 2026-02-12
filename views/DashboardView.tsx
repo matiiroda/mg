@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
-import { ICONS, COLORS } from '../constants';
 import { CajaSession } from '../types';
-import Logo from '../components/Logo';
 
 interface DashboardProps {
   caja: CajaSession;
@@ -21,7 +19,6 @@ const DashboardView: React.FC<DashboardProps> = ({ caja, openCaja, closeCaja }) 
     <div className="space-y-8 animate-fadeIn">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Logo className="w-12 h-12" />
           <div>
             <h2 className="text-4xl font-black text-[#C5A059] tracking-tighter leading-none">PANEL DE CONTROL</h2>
             <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.4em] mt-1">Estética Corporal de Lujo</p>
@@ -58,7 +55,7 @@ const DashboardView: React.FC<DashboardProps> = ({ caja, openCaja, closeCaja }) 
       ) : (
         <div className="bg-[#111111] p-20 rounded-[3rem] border border-[#C5A059]/10 text-center">
           <div className="bg-[#C5A059]/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 border border-[#C5A059]/20">
-            <Logo className="w-12 h-12 opacity-50" />
+             <span className="text-5xl font-black text-[#C5A059] opacity-20">MG</span>
           </div>
           <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-4">La caja está cerrada</h3>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] max-w-xs mx-auto mb-10">Inicie un nuevo turno para comenzar a registrar ventas y servicios.</p>
@@ -66,13 +63,10 @@ const DashboardView: React.FC<DashboardProps> = ({ caja, openCaja, closeCaja }) 
         </div>
       )}
 
-      {/* Se eliminó la sección de Gráfico Mensual por solicitud del usuario */}
-
       {showCajaModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-[#1A1A1A] rounded-[3rem] border border-[#C5A059]/20 shadow-2xl w-full max-w-sm overflow-hidden animate-slideUp">
             <div className="p-10 text-center">
-              <Logo className="w-16 h-16 mx-auto mb-6" />
               <h4 className="text-2xl font-black text-[#C5A059] mb-6 uppercase tracking-widest">Apertura de Turno</h4>
               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Monto Inicial en Efectivo</p>
               <input type="number" onChange={e => setOpenAmount(Number(e.target.value))} className="w-full px-8 py-5 bg-black border border-[#C5A059]/10 rounded-full outline-none font-black text-center text-3xl mb-8 text-[#C5A059]" placeholder="0" />

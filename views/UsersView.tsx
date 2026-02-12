@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { ICONS } from '../constants';
 import { UserRole, User } from '../types';
-import Logo from '../components/Logo';
 
 interface UsersViewProps {
   users: User[];
@@ -95,7 +94,6 @@ const UsersView: React.FC<UsersViewProps> = ({ users, setUsers }) => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-[#111111] rounded-[3.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-[#C5A059]/20">
             <div className="bg-[#1A1A1A] p-10 border-b border-[#C5A059]/10 text-center">
-              <Logo className="w-20 h-20 mx-auto mb-4" />
               <h3 className="text-2xl font-black text-[#C5A059] uppercase tracking-widest">Nuevo Perfil</h3>
               <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Crear Acceso al Sistema</p>
             </div>
